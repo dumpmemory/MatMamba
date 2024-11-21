@@ -394,7 +394,7 @@ class MatMamba2(nn.Module, PyTorchModelHubMixin):
                 dim_slice_idx=dim_slice_idx,
             )  # (B, L, d_in_proj) or (B * L, d_in_proj)
 
-        d_mlp = (zxbcdt.shape[-1] - 2 * (2*dim_slice_idx) - 2 * self.ngroups * self.d_state - self.nheads) // 2
+        d_mlp = (zxbcdt.shape[-1] - 2 * (2*dim_slice_idx) - 2 * self.ngroups * self.d_state - mrl_n_heads) // 2
         z0, x0, z, xBC, dt = torch.split(
             zxbcdt,
             [d_mlp, d_mlp, 2*dim_slice_idx, (2*dim_slice_idx) + 2 * self.ngroups * self.d_state, mrl_n_heads],
@@ -461,7 +461,7 @@ class MatMamba2(nn.Module, PyTorchModelHubMixin):
             # print("ssm_state:", ssm_state.shape)
             # print("z:", z.shape)
             y = selective_state_update(
-                ssm_state[:, :, :x_reshaped.shape[2], :], x_reshaped, dt, A, B, C, D, z=z if not self.rmsnorm else None,
+                ssm_state[:, :x_reshaped.shape[1], :x_reshaped.shape[2], :], x_reshaped, dt, A, B, C, D, z=z if not self.rmsnorm else None,
                 dt_bias=dt_bias, dt_softplus=True
             )
             y = rearrange(y, "b h p -> b (h p)")
